@@ -1,5 +1,6 @@
 
-from .Opcode import Opcode
+from .Opcode import *
+
 
 class Inst():
     """
@@ -30,11 +31,38 @@ class Inst():
     MASK_K  = 0b00000000000000001000000000000000
     MASK_B  = 0b00000000111111110000000000000000
     MASK_C  = 0b11111111000000000000000000000000
+    MASK_Bx = 0b11111111111111111000000000000000
     MASK_sBx= 0b11111111111111111000000000000000
     MASK_Ax = 0b11111111111111111111111110000000
     MASK_sJ = 0b11111111111111111111111110000000
 
-    def __init__(self):
-        print(Inst.MASK_OP)
+    def __init__(self, instruction):
+        self.arg_A = None
+        self.arg_B = None
+        self.arg_C = None
+        self.arg_K = None
+        self.arg_Bx = None
+        self.arg_sBx = None
+        self.arg_Ax = None
+        self.arg_sJ = None
+        self.opcode = Opcode(instruction & Inst.MASK_OP)
+        print(self.opcode)
+        self.InstFormat = Opmodes.opmodes[self.opcode.value].get_format()
+
+        if self.InstFormat == InstFormat.iABC:
+            self.arg_A = instruction & Inst.MASK_A
+            self.arg_B = instruction & Inst.MASK_B
+            self.arg_C = instruction & Inst.MASK_C
+            self.arg_K = instruction & Inst.MASK_K
+        elif self.InstFormat == InstFormat.iABx:
+            self.arg_A = instruction & Inst.MASK_A
+            self.arg_Bx = instruction & Inst.MASK_Bx
+        elif self.InstFormat == InstFormat.iAsBx:
+            self.arg_A = instruction & Inst.MASK_A
+            self.arg_sBx = instruction & Inst.MASK_sBx
+        elif self.InstFormat == InstFormat.iAx:
+            self.arg_Ax = instruction & Inst.MASK_Ax
+        elif self.InstFormat == InstFormat.isJ:
+            self.arg_sJ = instruction & Inst.MASK_sJ
 
 

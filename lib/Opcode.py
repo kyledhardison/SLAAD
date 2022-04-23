@@ -2,21 +2,111 @@
 import enum
 
 
-class InstFormat(enum.Enum):
+class Opcode(enum.IntEnum):
+    '''
+    All Lua 5.4.4 opcodes
+    '''
+    MOVE         = 0
+    LOADI        = 1
+    LOADF        = 2
+    LOADK        = 3
+    LOADKX       = 4
+    LOADFALSE    = 5
+    LFALSESKIP   = 6
+    LOADTRUE     = 7
+    LOADNIL      = 8
+    GETUPVAL     = 9
+    SETUPVAL     = 10
+    GETTABUP     = 11
+    GETTABLE     = 12
+    GETI         = 13
+    GETFIELD     = 14
+    SETTABUP     = 15
+    SETTABLE     = 16
+    SETI         = 17
+    SETFIELD     = 18
+    NEWTABLE     = 19
+    SELF         = 20
+    ADDI         = 21
+    ADDK         = 22
+    SUBK         = 23
+    MULK         = 24
+    MODK         = 25
+    POWK         = 26
+    DIVK         = 27
+    IDIVK        = 28
+    BANDK        = 29
+    BORK         = 30
+    BXORK        = 31
+    SHRI         = 32
+    SHLI         = 33
+    ADD          = 34
+    SUB          = 35
+    MUL          = 36
+    MOD          = 37
+    POW          = 38
+    DIV          = 39
+    IDIV         = 40
+    BAND         = 41
+    BOR          = 42
+    BXOR         = 43
+    SHL          = 44
+    SHR          = 45
+    MMBIN        = 46
+    MMBINI       = 47
+    MMBINK       = 48
+    UNM          = 49
+    BNOT         = 50
+    NOT          = 51
+    LEN          = 52
+    CONCAT       = 53
+    CLOSE        = 54
+    TBC          = 55
+    JMP          = 56
+    EQ           = 57
+    LT           = 58
+    LE           = 59
+    EQK          = 60
+    EQI          = 61
+    LTI          = 62
+    LEI          = 63
+    GTI          = 64
+    GEI          = 65
+    TEST         = 66
+    TESTSET      = 67
+    CALL         = 68
+    TAILCALL     = 69
+    RETURN       = 70
+    RETURN0      = 71
+    RETURN1      = 72
+    FORLOOP      = 73
+    FORPREP      = 74
+    TFORPREP     = 75
+    TFORCALL     = 76
+    TFORLOOP     = 77
+    SETLIST      = 78
+    CLOSURE      = 79
+    VARARG       = 80
+    VARARGPREP   = 81
+    EXTRAARG     = 82
+
+
+class InstFormat(enum.IntEnum):
     '''
     The 5 instruction formats available in Lua 5.4.4
     '''
-    iABC  = 1
-    iABx  = 2
-    iAsBx = 3
-    iAx   = 4
-    isJ   = 5
+    iABC  = 0
+    iABx  = 1
+    iAsBx = 2
+    iAx   = 3
+    isJ   = 4
 
 
 class Opmode():
     '''
     Opmodes for each instruction
     '''
+    # Array of Opmodes for each instruction
     def __init__(self, mm, ot, it, t, a, m):
         # Whether an instruction calls a metainstruction
         self.mm = mm
@@ -29,98 +119,17 @@ class Opmode():
         # Instruction set register A
         self.a = a
         # Op mode (InstFormat)
-        self.m = m
+        self.mode = InstFormat(m)
+
+    def get_format(self):
+        return self.mode
 
 
-class Opcode(enum.Enum):
+class Opmodes():
+    ''' 
+    Storage class for the opmodes array which contains instruction
+    details like instruction format
     '''
-    All Lua 5.4.4 opcodes
-    '''
-    MOVE         = 1
-    LOADI        = 2
-    LOADF        = 3
-    LOADK        = 4
-    LOADKX       = 5
-    LOADFALSE    = 6
-    LFALSESKIP   = 7
-    LOADTRUE     = 8
-    LOADNIL      = 9
-    GETUPVAL     = 10
-    SETUPVAL     = 11
-    GETTABUP     = 12
-    GETTABLE     = 13
-    GETI         = 14
-    GETFIELD     = 15
-    SETTABUP     = 16
-    SETTABLE     = 17
-    SETI         = 18
-    SETFIELD     = 19
-    NEWTABLE     = 20
-    SELF         = 21
-    ADDI         = 22
-    ADDK         = 23
-    SUBK         = 24
-    MULK         = 25
-    MODK         = 26
-    POWK         = 27
-    DIVK         = 28
-    IDIVK        = 29
-    BANDK        = 30
-    BORK         = 31
-    BXORK        = 32
-    SHRI         = 33
-    SHLI         = 34
-    ADD          = 35
-    SUB          = 36
-    MUL          = 37
-    MOD          = 38
-    POW          = 39
-    DIV          = 40
-    IDIV         = 41
-    BAND         = 42
-    BOR          = 43
-    BXOR         = 44
-    SHL          = 45
-    SHR          = 46
-    MMBIN        = 47
-    MMBINI       = 48
-    MMBINK       = 49
-    UNM          = 50
-    BNOT         = 51
-    NOT          = 52
-    LEN          = 53
-    CONCAT       = 54
-    CLOSE        = 55
-    TBC          = 56
-    JMP          = 57
-    EQ           = 58
-    LT           = 59
-    LE           = 60
-    EQK          = 61
-    EQI          = 62
-    LTI          = 63
-    LEI          = 64
-    GTI          = 65
-    GEI          = 66
-    TEST         = 67
-    TESTSET      = 68
-    CALL         = 69
-    TAILCALL     = 70
-    RETURN       = 71
-    RETURN0      = 72
-    RETURN1      = 73
-    FORLOOP      = 74
-    FORPREP      = 75
-    TFORPREP     = 76
-    TFORCALL     = 77
-    TFORLOOP     = 78
-    SETLIST      = 79
-    CLOSURE      = 80
-    VARARG       = 81
-    VARARGPREP   = 82
-    EXTRAARG     = 83
-
-    # Array of Opmodes for each instruction
     opmodes = [
         #      MM OT IT T  A  Mode                 opcode
         Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # MOVE
@@ -207,6 +216,4 @@ class Opcode(enum.Enum):
         Opmode(0, 0, 1, 0, 1, InstFormat.iABC),  # VARARGPREP
         Opmode(0, 0, 0, 0, 0, InstFormat.iAx),   # EXTRAARG
     ]
-
-
 
