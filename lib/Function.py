@@ -1,5 +1,5 @@
 
-from .Types import Variant
+from .Types import *
 
 class Function():
     """
@@ -9,16 +9,14 @@ class Function():
         self.num_params = None  # Number of fixed parameters
         self.is_vararg = None
         self.max_stack_size = None  # Registers needed by this function
-        self.size_upvalues = None  # size of upvalues
-        self.size_constants = None  # size of constants, maybe unneeded
         self.constants = [] # Constants
-        self.size_code = None
-        self.size_line_info = None
+        self.line_info = None
         self.line_defined = None
         self.last_line_defined = None
         self.code = []  # opcodes
-        self.proto = []  # Functions defined inside this function
-        self.upvalues = None  # Upvalue information
+        self.protos = []  # Functions defined inside this function
+        self.upvalues = []  # Upvalue information
+        self.local_vars = []  # Local Variables
         self.source = None  # Source name - function name?
 
     def add_proto(self, new_proto):
@@ -27,14 +25,41 @@ class Function():
     def add_constant(self, t, v):
         '''
         Add a constant to the list
-
-        :param t: The constant type (see Variant class)
+        :param t: The constant type (see Constant class)
         :param v: The constant value
         '''
-        if t not in Variant:
-            # TODO error handling
-            print("INVALID CONSTANT TYPE")
-        self.constants.append({
-            'type': t,
-            'value': v})
+        self.constants.append(Constant(t, v))
+
+    def add_upvalue(self, name, instack, idx, kind):
+        '''
+        Add an upvalue to the list
+        :param instack: whether it is in the stack (a register)
+        :param idx: index of upvalue (in stack or outer function's list)
+
+        '''
+        self.upvalues.append(Upvalue(name, instack, idx, kind))
+
+    def add_proto(self, proto):
+        '''
+        Add a function to the protos list
+        :param proto: The function to be added to the list:
+        '''
+        self.protos.append(proto)
+
+    def add_abs_line_info(self, pc, line):
+        '''
+        Add an entry to the abs_line_info list
+        :param pc: Instruction address
+        :param line: Source file line
+        '''
+        self.abs_line_info.append(AbsLineInfo(pc, line))
+
+    def add_local_var(self, name, start_pc, end_pc):
+        '''
+        Add an entry to the local_vars list
+        :param name: Variable name
+        :param start_pc: start PC
+        :param end_pcL end pc
+        '''
+        self.local_vars.append(LocalVar(name, start_pc, end_pc))
 

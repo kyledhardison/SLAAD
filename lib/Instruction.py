@@ -65,9 +65,14 @@ class Inst():
         elif self.InstFormat == InstFormat.isJ:
             self.arg_sJ = (instruction & Inst.MASK_sJ) >> Inst.POS_sJ
 
-    def print_inst(self, show_k=False):
+    def get_inst_str(self, show_k=False):
         # TODO full instruction formatting (inst #, upvalue?)
-        if self.InstFormat == InstFormat.iABC:
+        if self.opcode == Opcode.RETURN0:
+            # Edge case, the only opcode with no arguments
+            # Don't feel like rewriting Opmodes and Opmode for this
+            line = str(self.opcode).split('.')[1].ljust(20)
+
+        elif self.InstFormat == InstFormat.iABC:
             line = str(self.opcode).split('.')[1].ljust(20)
             line += '{}'.format(self.arg_A)
 
