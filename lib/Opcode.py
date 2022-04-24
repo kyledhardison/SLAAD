@@ -102,12 +102,25 @@ class InstFormat(enum.IntEnum):
     isJ   = 4
 
 
+class Arg(enum.IntEnum):
+    '''
+    Used to define the arguments B, C, and k uses for specific instructions
+    '''
+    # Arg not used
+    N = 0
+    # Arg used - unsigned
+    U = 1
+    # Arg used - signed
+    S = 2
+
+
 class Opmode():
     '''
     Opmodes for each instruction
     '''
     # Array of Opmodes for each instruction
-    def __init__(self, mm, ot, it, t, a, m):
+    def __init__(self, mm, ot, it, t, a, m, has_A, has_B, has_C, has_k):
+        # BEGIN unused internal Lua stuff
         # Whether an instruction calls a metainstruction
         self.mm = mm
         # Instruction sets 'L->top' for next instruction (when C == 0)
@@ -118,102 +131,129 @@ class Opmode():
         self.t = t
         # Instruction set register A
         self.a = a
+        # END unused internal Lua stuff
+
         # Op mode (InstFormat)
         self.mode = InstFormat(m)
 
-    def get_format(self):
-        return self.mode
+        # These two instruction formats cannot have an A argument
+        if self.mode == InstFormat.iAx or self.mode == InstFormat.isJ:
+            if has_A != Arg.N:
+                print("INVALID INSTRUCTION! {}".format(self.mode))
+
+        if has_k == Arg.S:
+                print("INVALID INSTRUCTION! {}".format(self.mode))
+
+        self.has_A = has_A
+
+        if self.mode == InstFormat.iABC:
+            # Whether the instruction uses the B operand
+            self.has_B = has_B
+            # Whether the instruction uses the C operand
+            self.has_C = has_C
+            # Whether the instruction uses the k operand
+            self.has_k = has_k
+        else:
+            # Non-iABC formats should not have B, C, or k arguments
+            if has_B != Arg.N or has_C != Arg.N or has_k != Arg.N:
+                print("INVALID INSTRUCTION! {}".format(self.mode))
+            self.has_B = Arg.N
+            self.has_C = Arg.N
+            self.has_k = Arg.N
 
 
 class Opmodes():
     ''' 
     Storage class for the opmodes array which contains instruction
     details like instruction format
+
+    Defined in the Opmode class
     '''
     opmodes = [
-        #      MM OT IT T  A  Mode                 opcode
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # MOVE
-        Opmode(0, 0, 0, 0, 1, InstFormat.iAsBx), # LOADI
-        Opmode(0, 0, 0, 0, 1, InstFormat.iAsBx), # LOADF
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABx),  # LOADK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABx),  # LOADKX
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # LOADFALSE
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # LFALSESKIP
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # LOADTRUE
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # LOADNIL
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # GETUPVAL
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABC),  # SETUPVAL
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # GETTABUP
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # GETTABLE
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # GETI
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # GETFIELD
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABC),  # SETTABUP
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABC),  # SETTABLE
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABC),  # SETI
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABC),  # SETFIELD
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # NEWTABLE
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # SELF
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # ADDI
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # ADDK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # SUBK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # MULK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # MODK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # POWK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # DIVK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # IDIVK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # BANDK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # BORK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # BXORK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # SHRI
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # SHLI
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # ADD
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # SUB
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # MUL
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # MOD
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # POW
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # DIV
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # IDIV
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # BAND
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # BOR
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # BXOR
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # SHL
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # SHR
-        Opmode(1, 0, 0, 0, 0, InstFormat.iABC),  # MMBIN
-        Opmode(1, 0, 0, 0, 0, InstFormat.iABC),  # MMBINI
-        Opmode(1, 0, 0, 0, 0, InstFormat.iABC),  # MMBINK
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # UNM
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # BNOT
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # NOT
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # LEN
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABC),  # CONCAT
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABC),  # CLOSE
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABC),  # TBC
-        Opmode(0, 0, 0, 0, 0, InstFormat.isJ),   # JMP
-        Opmode(0, 0, 0, 1, 0, InstFormat.iABC),  # EQ
-        Opmode(0, 0, 0, 1, 0, InstFormat.iABC),  # LT
-        Opmode(0, 0, 0, 1, 0, InstFormat.iABC),  # LE
-        Opmode(0, 0, 0, 1, 0, InstFormat.iABC),  # EQK
-        Opmode(0, 0, 0, 1, 0, InstFormat.iABC),  # EQI
-        Opmode(0, 0, 0, 1, 0, InstFormat.iABC),  # LTI
-        Opmode(0, 0, 0, 1, 0, InstFormat.iABC),  # LEI
-        Opmode(0, 0, 0, 1, 0, InstFormat.iABC),  # GTI
-        Opmode(0, 0, 0, 1, 0, InstFormat.iABC),  # GEI
-        Opmode(0, 0, 0, 1, 0, InstFormat.iABC),  # TEST
-        Opmode(0, 0, 0, 1, 1, InstFormat.iABC),  # TESTSET
-        Opmode(0, 1, 1, 0, 1, InstFormat.iABC),  # CALL
-        Opmode(0, 1, 1, 0, 1, InstFormat.iABC),  # TAILCALL
-        Opmode(0, 0, 1, 0, 0, InstFormat.iABC),  # RETURN
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABC),  # RETURN0
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABC),  # RETURN1
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABx),  # FORLOOP
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABx),  # FORPREP
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABx),  # TFORPREP
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABC),  # TFORCALL
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABx),  # TFORLOOP
-        Opmode(0, 0, 1, 0, 0, InstFormat.iABC),  # SETLIST
-        Opmode(0, 0, 0, 0, 1, InstFormat.iABx),  # CLOSURE
-        Opmode(0, 1, 0, 0, 1, InstFormat.iABC),  # VARARG
-        Opmode(0, 0, 1, 0, 1, InstFormat.iABC),  # VARARGPREP
-        Opmode(0, 0, 0, 0, 0, InstFormat.iAx),   # EXTRAARG
+        #      [internal lua] [            Used by SLAAD             ]
+        #      MM OT IT T  A  Mode              A      B      C      k        opcode
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.N),  # MOVE
+        Opmode(0, 0, 0, 0, 1, InstFormat.iAsBx, Arg.U, Arg.N, Arg.N, Arg.N),  # LOADI
+        Opmode(0, 0, 0, 0, 1, InstFormat.iAsBx, Arg.U, Arg.N, Arg.N, Arg.N),  # LOADF
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABx,  Arg.U, Arg.N, Arg.N, Arg.N),  # LOADK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABx,  Arg.U, Arg.N, Arg.N, Arg.N),  # LOADKX
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # LOADFALSE
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # LFALSESKIP
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # LOADTRUE
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.N),  # LOADNIL
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.N),  # GETUPVAL
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.N),  # SETUPVAL
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # GETTABUP
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # GETTABLE
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # GETI
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # GETFIELD
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # SETTABUP
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # SETTABLE
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # SETI
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # SETFIELD
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.U),  # NEWTABLE
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # SELF
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.S, Arg.N),  # ADDI
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # ADDK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # SUBK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # MULK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # MODK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # POWK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # DIVK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # IDIVK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # BANDK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # BORK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # BXORK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.S, Arg.N),  # SHRI
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.S, Arg.N),  # SHLI
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # ADD
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # SUB
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # MUL
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # MOD
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # POW
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # DIV
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # IDIV
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # BAND
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # BOR
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # BXOR
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # SHL
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # SHR
+        Opmode(1, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # MMBIN
+        Opmode(1, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.S, Arg.U),  # MMBINI
+        Opmode(1, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.U),  # MMBINK
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # UNM
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.N),  # BNOT
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.N),  # NOT
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.N),  # LEN
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.N),  # CONCAT
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # CLOSE
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # TBC
+        Opmode(0, 0, 0, 0, 0, InstFormat.isJ,   Arg.N, Arg.N, Arg.N, Arg.N),  # JMP
+        Opmode(0, 0, 0, 1, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.U),  # EQ
+        Opmode(0, 0, 0, 1, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.U),  # LT
+        Opmode(0, 0, 0, 1, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.U),  # LE
+        Opmode(0, 0, 0, 1, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.U),  # EQK
+        Opmode(0, 0, 0, 1, 0, InstFormat.iABC,  Arg.U, Arg.S, Arg.N, Arg.U),  # EQI
+        Opmode(0, 0, 0, 1, 0, InstFormat.iABC,  Arg.U, Arg.S, Arg.N, Arg.U),  # LTI
+        Opmode(0, 0, 0, 1, 0, InstFormat.iABC,  Arg.U, Arg.S, Arg.N, Arg.U),  # LEI
+        Opmode(0, 0, 0, 1, 0, InstFormat.iABC,  Arg.U, Arg.S, Arg.N, Arg.U),  # GTI
+        Opmode(0, 0, 0, 1, 0, InstFormat.iABC,  Arg.U, Arg.S, Arg.N, Arg.U),  # GEI
+        Opmode(0, 0, 0, 1, 0, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.U),  # TEST
+        Opmode(0, 0, 0, 1, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.U),  # TESTSET
+        Opmode(0, 1, 1, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # CALL
+        Opmode(0, 1, 1, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.U),  # TAILCALL
+        Opmode(0, 0, 1, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.U),  # RETURN
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # RETURN0
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # RETURN1
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABx,  Arg.U, Arg.N, Arg.N, Arg.N),  # FORLOOP
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABx,  Arg.U, Arg.N, Arg.N, Arg.N),  # FORPREP
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABx,  Arg.U, Arg.N, Arg.N, Arg.N),  # TFORPREP
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.N, Arg.U, Arg.N),  # TFORCALL
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABx,  Arg.U, Arg.N, Arg.N, Arg.N),  # TFORLOOP
+        Opmode(0, 0, 1, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.U),  # SETLIST
+        Opmode(0, 0, 0, 0, 1, InstFormat.iABx,  Arg.U, Arg.N, Arg.N, Arg.N),  # CLOSURE
+        Opmode(0, 1, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.N, Arg.U, Arg.N),  # VARARG
+        Opmode(0, 0, 1, 0, 1, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # VARARGPREP
+        Opmode(0, 0, 0, 0, 0, InstFormat.iAx,   Arg.N, Arg.N, Arg.N, Arg.N),  # EXTRAARG
     ]
 

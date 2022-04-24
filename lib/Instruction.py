@@ -28,7 +28,7 @@ class Inst():
     
     MASK_OP = 0b00000000000000000000000001111111
     MASK_A  = 0b00000000000000000111111110000000
-    MASK_K  = 0b00000000000000001000000000000000
+    MASK_k  = 0b00000000000000001000000000000000
     MASK_B  = 0b00000000111111110000000000000000
     MASK_C  = 0b11111111000000000000000000000000
     MASK_Bx = 0b11111111111111111000000000000000
@@ -40,29 +40,69 @@ class Inst():
         self.arg_A = None
         self.arg_B = None
         self.arg_C = None
-        self.arg_K = None
+        self.arg_k = None
         self.arg_Bx = None
         self.arg_sBx = None
         self.arg_Ax = None
         self.arg_sJ = None
         self.opcode = Opcode(instruction & Inst.MASK_OP)
-        print(self.opcode)
-        self.InstFormat = Opmodes.opmodes[self.opcode.value].get_format()
+        self.opmode = Opmodes.opmodes[self.opcode.value] 
+        self.InstFormat = self.opmode.mode
 
         if self.InstFormat == InstFormat.iABC:
-            self.arg_A = instruction & Inst.MASK_A
-            self.arg_B = instruction & Inst.MASK_B
-            self.arg_C = instruction & Inst.MASK_C
-            self.arg_K = instruction & Inst.MASK_K
+            self.arg_A = (instruction & Inst.MASK_A) >> Inst.POS_A
+            self.arg_B = (instruction & Inst.MASK_B) >> Inst.POS_B
+            self.arg_C = (instruction & Inst.MASK_C) >> Inst.POS_C
+            self.arg_k = (instruction & Inst.MASK_k) >> Inst.POS_k
         elif self.InstFormat == InstFormat.iABx:
-            self.arg_A = instruction & Inst.MASK_A
-            self.arg_Bx = instruction & Inst.MASK_Bx
+            self.arg_A = (instruction & Inst.MASK_A) >> Inst.POS_A
+            self.arg_Bx = (instruction & Inst.MASK_Bx) >> Inst.POS_Bx
         elif self.InstFormat == InstFormat.iAsBx:
-            self.arg_A = instruction & Inst.MASK_A
-            self.arg_sBx = instruction & Inst.MASK_sBx
+            self.arg_A = (instruction & Inst.MASK_A) >> Inst.POS_A
+            self.arg_sBx = (instruction & Inst.MASK_sBx) >> Inst.POS_sBx
         elif self.InstFormat == InstFormat.iAx:
-            self.arg_Ax = instruction & Inst.MASK_Ax
+            self.arg_Ax = (instruction & Inst.MASK_Ax) >> Inst.POS_Ax
         elif self.InstFormat == InstFormat.isJ:
-            self.arg_sJ = instruction & Inst.MASK_sJ
+            self.arg_sJ = (instruction & Inst.MASK_sJ) >> Inst.POS_sJ
 
+    def print_inst(self, show_k=False):
+        # TODO full instruction formatting (inst #, upvalue?)
+        if self.InstFormat == InstFormat.iABC:
+            line = str(self.opcode).split('.')[1].ljust(20)
+            line += '{}'.format(self.arg_A)
+
+            if self.opmode.has_B == Arg.U:
+                line += " {}".format(self.arg_B)
+            elif self.opmode.has_B == Arg.S:
+                # TODO signed B
+                line += " {}".format(self.arg_B)
+
+            if self.opmode.has_C == Arg.U:
+                line += " {}".format(self.arg_C)
+            elif self.opmode.has_C == Arg.S:
+                # TODO signed C
+                line += " {}".format(self.arg_C)
+            # TODO: Print k?
+
+        elif self.InstFormat == InstFormat.iABx:
+            line = str(self.opcode).split('.')[1].ljust(20)
+            line += '{}'.format(self.arg_A)
+            line += ' {}'.format(self.arg_Bx)
+
+        elif self.InstFormat == InstFormat.iAsBx:
+            line = str(self.opcode).split('.')[1].ljust(20)
+            line += '{}'.format(self.arg_A)
+            line += ' {}'.format(self.arg_sBx)
+
+        elif self.InstFormat == InstFormat.iAx:
+            line = str(self.opcode).split('.')[1].ljust(20)
+            line += '{}'.format(self.arg_A)
+            line += ' {}'.format(self.arg_Ax)
+
+        elif self.InstFormat == InstFormat.isJ:
+            line = str(self.opcode).split('.')[1].ljust(20)
+            line += '{}'.format(self.arg_A)
+            line += ' {}'.format(self.arg_sJ)
+
+        print(line)
 
