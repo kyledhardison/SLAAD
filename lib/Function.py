@@ -17,10 +17,23 @@ class Function():
         self.protos = []  # Functions defined inside this function
         self.upvalues = []  # Upvalue information
         self.local_vars = []  # Local Variables
+        self.abs_line_info = []
         self.source = None  # Source name - function name?
+        self.instructions = []
 
     def add_proto(self, new_proto):
-        self.proto.append(new_proto)
+        """
+        Add a function prototype to the list
+        :param new_proto: The function to add
+        """
+        self.protos.append(new_proto)
+
+    def add_inst(self, inst):
+        """
+        Add an instruction to the instructions list
+        :param inst: The instruction to add
+        """
+        self.instructions.append(inst)
     
     def add_constant(self, t, v):
         '''

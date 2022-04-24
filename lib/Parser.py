@@ -35,7 +35,7 @@ class Verbosity(enum.Enum):
 
 
 class Parser():
-    def __init__(self, filename, verbosity=Verbosity.OFF):
+    def __init__(self, filename, verbosity=Verbosity.OFF, opcode_notes=False):
         '''
         :param filename: Lua bytecode file to be parsed
         :param verbosity: 0-2 verbosity level
@@ -48,6 +48,7 @@ class Parser():
         # going into the Functions.protos list of the main one
         self.func = None
         self.verbosity = verbosity
+        self.print_opcode_notes = opcode_notes
 
     def error(self, message):
         raise Exception(message)
@@ -108,7 +109,7 @@ class Parser():
             return None
         size = size - 1
         out = self.read_byte(size).decode("utf-8")
-        if self.is_info_level():
+        if self.is_verbose_level():
             print("String: {}".format(out))
         return out
 
@@ -130,9 +131,12 @@ class Parser():
         :param Function: func 
         """
         n = self.read_int()
+        if self.verbosity == Verbosity.INFO:
+            print("Instructions: {}".format(n))
         for i in range(0, n):
             word = self.read_byte(4)
             inst = Inst(int.from_bytes(word, ENDIANNESS))
+            func.add_inst(inst)
 
     def read_constants(self, func):
         """
@@ -186,14 +190,14 @@ class Parser():
     def read_protos(self, func):
         """
         Read function prototypes
-        Note: prototypes are just more functions, 
-        this is just how they're scoped in Lua
+        Note: prototypes are just more functions, this is how they're scoped in Lua
         :param func: The function containing the prototypes
         """
         n = self.read_int()
         for i in range(0, n):
-            f = self.read_function(func)
-            print("Adding proto")
+            if self.verbosity == Verbosity.INFO:
+                print("\nFunction:")
+            f = self.read_function()
             func.add_proto(f)
 
     def read_debug(self, func):
@@ -265,42 +269,73 @@ class Parser():
         buf = self.read_num()
         self.verify_value(struct.unpack("d", buf)[0], LUAC_NUM)
 
-    def read_function(self, parent=None):
+    def read_function(self) -> Function:
         f = Function()
         f.source = self.read_string()
         if self.is_info_level():
             print("Function name: {}".format(f.source))
-        if f.source is None and parent is not None:
-            f.source = parent.source
 
         f.line_defined = self.read_int()
         f.last_line_defined = self.read_int()
+
+        if self.is_info_level():
+            print("Lines: {}-{}".format(f.line_defined, f.last_line_defined))
         f.num_params = int.from_bytes(self.read_byte(), ENDIANNESS)
         f.is_vararg = int.from_bytes(self.read_byte(), ENDIANNESS)
         f.max_stack_size = int.from_bytes(self.read_byte(), ENDIANNESS)
         if self.is_info_level():
             print("Params: {}, is_vararg: {}, max_stack_size: {}"
                     .format(f.num_params, f.is_vararg, f.max_stack_size))
+
         self.read_code(f)
-        # Constants
         self.read_constants(f)
-        # Upvalues
         self.read_upvalues(f)
-        # Protos
-        # TODO verify read_protos works
         self.read_protos(f)
-        # Debug
         self.read_debug(f)
 
         return f
 
+    def dump_function(self, f) -> str:
+        """
+        Create and return a string containing the dump of a function
+        :param function: 
+        """
+        out  = "Function: \n"
+        if f.source != None:
+            out += "{} \n".format(f.source)
+
+        out += "Lines {}-{}, {} Instructions \n" \
+                .format(f.line_defined, f.last_line_defined, len(f.instructions))
+        
+        out += "{} Params, {} Register Slots, {} Upvalues \n" \
+                .format(f.num_params, f.max_stack_size, len(f.upvalues))
+
+        out += "{} Locals, {} Constants, {} Functions \n" \
+                .format(len(f.local_vars), len(f.constants), len(f.protos))
+
+        for i in range(0, len(f.instructions)):
+            out += "   {}".format(i + 1).ljust(10) + \
+                f.instructions[i].get_inst_str().ljust(25) 
+
+            if self.print_opcode_notes:
+                out += f.instructions[i].desc
+            out += "\n"
+        
+        out += "\n"
+
+        for i in range(0, len(f.protos)):
+            out += self.dump_function(f.protos[i])
+
+        return out
+
+    def dump_program(self):
+        out = self.dump_function(self.func)
+        print(out)
 
     def parse(self):
         self.parse_program_header()
-        #i = Inst()
         self.size_upvalues = self.read_byte()
         self.func = self.read_function()
-
-
+        self.dump_program()
 
 

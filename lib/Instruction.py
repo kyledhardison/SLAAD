@@ -23,9 +23,17 @@ class Inst():
     POS_C   =   (POS_B + SIZE_B)
 
     POS_Bx  =   POS_k
+    POS_sBx =   POS_k
     POS_Ax  =   POS_A
     POS_sJ  =   POS_A
     
+    # Signed arguments are represented in excess-K (offset binary) notation.
+    # The represented value is the written unassigned value minus K, where
+    # K is half of the maximum for a given field (2 ^ (n-1)) - 1
+    K_8_BIT  =  127  # 2^7 - 1
+    K_17_BIT =  65535  # 2^16 - 1
+    K_25_BIT =  16777215  # 2^24 - 1
+
     MASK_OP = 0b00000000000000000000000001111111
     MASK_A  = 0b00000000000000000111111110000000
     MASK_k  = 0b00000000000000001000000000000000
@@ -37,6 +45,11 @@ class Inst():
     MASK_sJ = 0b11111111111111111111111110000000
 
     def __init__(self, instruction):
+        '''
+        Parse an instruction from raw bytes
+        :param raw_instruction: the raw 32-bit instruction
+        :param endianness: "little" or "big"
+        '''
         self.arg_A = None
         self.arg_B = None
         self.arg_C = None
@@ -47,67 +60,82 @@ class Inst():
         self.arg_sJ = None
         self.opcode = Opcode(instruction & Inst.MASK_OP)
         self.opmode = Opmodes.opmodes[self.opcode.value] 
+        self.desc = Opmodes.opdesc[self.opcode.value]
         self.InstFormat = self.opmode.mode
+        self.inst_print_len = 12  # Longest opcode string is 10, plus some padding
 
         if self.InstFormat == InstFormat.iABC:
             self.arg_A = (instruction & Inst.MASK_A) >> Inst.POS_A
             self.arg_B = (instruction & Inst.MASK_B) >> Inst.POS_B
             self.arg_C = (instruction & Inst.MASK_C) >> Inst.POS_C
             self.arg_k = (instruction & Inst.MASK_k) >> Inst.POS_k
+
+            # Adjust for signing
+            if self.opmode.has_B == Arg.S:
+                self.arg_B -= Inst.K_8_BIT
+            elif self.opmode.has_C == Arg.S:
+                self.arg_C -= Inst.K_8_BIT
+
         elif self.InstFormat == InstFormat.iABx:
             self.arg_A = (instruction & Inst.MASK_A) >> Inst.POS_A
             self.arg_Bx = (instruction & Inst.MASK_Bx) >> Inst.POS_Bx
+
         elif self.InstFormat == InstFormat.iAsBx:
             self.arg_A = (instruction & Inst.MASK_A) >> Inst.POS_A
             self.arg_sBx = (instruction & Inst.MASK_sBx) >> Inst.POS_sBx
+            # Adjust for signing
+            self.arg_sBx -= Inst.K_17_BIT
+
         elif self.InstFormat == InstFormat.iAx:
             self.arg_Ax = (instruction & Inst.MASK_Ax) >> Inst.POS_Ax
+
         elif self.InstFormat == InstFormat.isJ:
             self.arg_sJ = (instruction & Inst.MASK_sJ) >> Inst.POS_sJ
+            # Adjust for signing
+            self.arg_sJ -= Inst.K_25_BIT
 
-    def get_inst_str(self, show_k=False):
-        # TODO full instruction formatting (inst #, upvalue?)
+    def get_inst_str(self) -> str:
+        """
+        Create and return the string representation of this instance's 
+        opcode and arguments
+        """
         if self.opcode == Opcode.RETURN0:
             # Edge case, the only opcode with no arguments
             # Don't feel like rewriting Opmodes and Opmode for this
-            line = str(self.opcode).split('.')[1].ljust(20)
+            line = str(self.opcode).split('.')[1].ljust(self.inst_print_len)
 
         elif self.InstFormat == InstFormat.iABC:
-            line = str(self.opcode).split('.')[1].ljust(20)
+            line = str(self.opcode).split('.')[1].ljust(self.inst_print_len)
             line += '{}'.format(self.arg_A)
 
-            if self.opmode.has_B == Arg.U:
-                line += " {}".format(self.arg_B)
-            elif self.opmode.has_B == Arg.S:
-                # TODO signed B
+            if self.opmode.has_B == Arg.U or self.opmode.has_B == Arg.S:
                 line += " {}".format(self.arg_B)
 
-            if self.opmode.has_C == Arg.U:
+            if self.opmode.has_C == Arg.U or self.opmode.has_C == Arg.S:
                 line += " {}".format(self.arg_C)
-            elif self.opmode.has_C == Arg.S:
-                # TODO signed C
-                line += " {}".format(self.arg_C)
-            # TODO: Print k?
+
+            if self.opmode.has_k == Arg.U:
+                line += " {}".format(self.arg_k)
 
         elif self.InstFormat == InstFormat.iABx:
-            line = str(self.opcode).split('.')[1].ljust(20)
+            line = str(self.opcode).split('.')[1].ljust(self.inst_print_len)
             line += '{}'.format(self.arg_A)
             line += ' {}'.format(self.arg_Bx)
 
         elif self.InstFormat == InstFormat.iAsBx:
-            line = str(self.opcode).split('.')[1].ljust(20)
+            line = str(self.opcode).split('.')[1].ljust(self.inst_print_len)
             line += '{}'.format(self.arg_A)
             line += ' {}'.format(self.arg_sBx)
 
         elif self.InstFormat == InstFormat.iAx:
-            line = str(self.opcode).split('.')[1].ljust(20)
+            line = str(self.opcode).split('.')[1].ljust(self.inst_print_len)
             line += '{}'.format(self.arg_A)
             line += ' {}'.format(self.arg_Ax)
 
         elif self.InstFormat == InstFormat.isJ:
-            line = str(self.opcode).split('.')[1].ljust(20)
+            line = str(self.opcode).split('.')[1].ljust(self.inst_print_len)
             line += '{}'.format(self.arg_A)
             line += ' {}'.format(self.arg_sJ)
 
-        print(line)
+        return line
 

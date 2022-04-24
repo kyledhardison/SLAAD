@@ -163,12 +163,12 @@ class Opmode():
 
 
 class Opmodes():
-    ''' 
-    Storage class for the opmodes array which contains instruction
-    details like instruction format
-
-    Defined in the Opmode class
     '''
+    Storage class for the opmodes array which contains instruction
+    details like instruction format, and strings describing each instruction
+
+    '''
+    # Defined in the Opmode class
     opmodes = [
         #      [internal lua] [            Used by SLAAD             ]
         #      MM OT IT T  A  Mode              A      B      C      k        opcode
@@ -257,3 +257,89 @@ class Opmodes():
         Opmode(0, 0, 0, 0, 0, InstFormat.iAx,   Arg.N, Arg.N, Arg.N, Arg.N),  # EXTRAARG
     ]
 
+    # Short descriptions of each instruction
+    opdesc = [
+        "R[A] := R[B]",                                 # MOVE
+        "R[A] := sBx",                                  # LOADI
+        "R[A] := (lua_Number)sBx",                      # LOADF
+        "R[A] := K[Bx]",                                # LOADK
+        "R[A] := K[extra arg]",                         # LOADKX
+        "R[A] := false",                                # LOADFALSE
+        "R[A] := false; pc++",                          # LFALSESKIP
+        "R[A] := true",                                 # LOADTRUE
+        "R[A], R[A+1], ..., R[A+B] := nil",             # LOADNIL
+        "R[A] := UpValue[B]",                           # GETUPVAL
+        "UpValue[B] := R[A]",                           # SETUPVAL
+        "R[A] := UpValue[B][K[C]:string]",              # GETTABUP
+        "R[A] := R[B][R[C]]",                           # GETTABLE
+        "R[A] := R[B][C]",                              # GETI
+        "R[A] := R[B][K[C]:string]",                    # GETFIELD
+        "UpValue[A][K[B]:string] := RK(C)",             # SETTABUP
+        "R[A][R[B]] := RK(C)",                          # SETTABLE
+        "R[A][B] := RK(C)",                             # SETI
+        "R[A][K[B]:string] := RK(C)",                   # SETFIELD
+        "R[A] := {}",                                   # NEWTABLE
+        "R[A+1] := R[B]; R[A] := R[B][RK(C):string]",   # SELF
+        "R[A] := R[B] + sC",                            # ADDI
+        "R[A] := R[B] + K[C]:number",                   # ADDK
+        "R[A] := R[B] - K[C]:number",                   # SUBK
+        "R[A] := R[B] * K[C]:number",                   # MULK
+        "R[A] := R[B] % K[C]:number",                   # MODK
+        "R[A] := R[B] ^ K[C]:number",                   # POWK
+        "R[A] := R[B] / K[C]:number",                   # DIVK
+        "R[A] := R[B] // K[C]:number",                  # IDIVK
+        "R[A] := R[B] & K[C]:integer",                  # BANDK
+        "R[A] := R[B] | K[C]:integer",                  # BORK
+        "R[A] := R[B] ~ K[C]:integer",                  # BXORK
+        "R[A] := R[B] >> sC",                           # SHRI
+        "R[A] := sC << R[B]",                           # SHLI
+        "R[A] := R[B] + R[C]",                          # ADD
+        "R[A] := R[B] - R[C]",                          # SUB
+        "R[A] := R[B] * R[C]",                          # MUL
+        "R[A] := R[B] % R[C]",                          # MOD
+        "R[A] := R[B] ^ R[C]",                          # POW
+        "R[A] := R[B] / R[C]",                          # DIV
+        "R[A] := R[B] // R[C]",                         # IDIV
+        "R[A] := R[B] & R[C]",                          # BAND
+        "R[A] := R[B] | R[C]",                          # BOR
+        "R[A] := R[B] ~ R[C]",                          # BXOR
+        "R[A] := R[B] << R[C]",                         # SHL
+        "R[A] := R[B] >> R[C]",                         # SHR
+        "call C metamethod over R[A] and R[B]",         # MMBIN
+        "call C metamethod over R[A] and sB",           # MMBINI
+        "call C metamethod over R[A] and K[B]",         # MMBINK
+        "R[A] := -R[B]",                                # UNM
+        "R[A] := ~R[B]",                                # BNOT
+        "R[A] := not R[B]",                             # NOT
+        "R[A] := #R[B] (length operator)",              # LEN
+        "R[A] := R[A].. ... ..R[A + B - 1]",            # CONCAT
+        "close all upvalues >= R[A]",                   # CLOSE
+        "mark variable A 'to be closed'",               # TBC
+        "pc += sJ",                                     # JMP
+        "if ((R[A] == R[B]) ~= k) then pc++",           # EQ
+        "if ((R[A] <  R[B]) ~= k) then pc++",           # LT
+        "if ((R[A] <= R[B]) ~= k) then pc++",           # LE
+        "if ((R[A] == K[B]) ~= k) then pc++",           # EQK
+        "if ((R[A] == sB) ~= k) then pc++",             # EQI
+        "if ((R[A] < sB) ~= k) then pc++",              # LTI
+        "if ((R[A] <= sB) ~= k) then pc++",             # LEI
+        "if ((R[A] > sB) ~= k) then pc++",              # GTI
+        "if ((R[A] >= sB) ~= k) then pc++",             # GEI
+        "if (not R[A] == k) then pc++",                 # TEST
+        "if (not R[B] == k) then pc++ else R[A] := R[] := R[B]", # TESTSET
+        "R[A], ... ,R[A+C-2] := R[A](R[A+1], ... ,R[A+B-1])", # CALL
+        "return R[A](R[A+1], ... ,R[A+B-1])",           # TAILCALL
+        "return R[A], ... ,R[A+B-2]",                   # RETURN
+        "return",                                       # RETURN0
+        "return R[A]",                                  # RETURN1
+        "update counters; if loop continues then pc-=Bx", # FORLOOP
+        "<check values and prepare counters>; if not to run then pc+=Bx+1;", # FORPREP   
+        "create upvalue for R[A + 3]; pc+=Bx",          # TFORPREP
+        "R[A+4], ... ,R[A+3+C] := R[A](R[A+1], R[A+2]);", # TFORCALL
+        "if R[A+2] ~= nil then { R[A]=R[A+2]; pc -= Bx }", # TFORLOOP
+        "R[A][C+i] := R[A+i], 1 <= i <= B",             # SETLIST
+        "R[A] := closure(KPROTO[Bx])",                  # CLOSURE
+        "R[A], R[A+1], ..., R[A+C-2] = vararg",         # VARARG
+        "(adjust vararg parameters)",                   # VARARGPREP
+        "extra (larger) argument for previous opcode"   # EXTRAARG
+    ]

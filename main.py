@@ -16,6 +16,9 @@ def main():
     parser.add_argument("-vv", "--very-verbose", dest="verbose",
                         action="store_true",
                         help="Very Verbose (print all data member parsed)")
+    parser.add_argument("-op", "--opcode-notes", dest="opcode_notes",
+                        action="store_true",
+                        help="Print notes for each opcode to describe its operation")
 
     args = parser.parse_args()
     verbosity = Verbosity.OFF
@@ -23,7 +26,7 @@ def main():
         verbosity = Verbosity.INFO
     elif args.verbose:
         verbosity = Verbosity.VERBOSE
-    p = Parser(args.infile, verbosity)
+    p = Parser(args.infile, verbosity, args.opcode_notes)
     p.parse()
 
 
