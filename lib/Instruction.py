@@ -99,14 +99,11 @@ class Inst():
         Create and return the string representation of this instance's 
         opcode and arguments
         """
-        if self.opcode == Opcode.RETURN0:
-            # Edge case, the only opcode with no arguments
-            # Don't feel like rewriting Opmodes and Opmode for this
+        if self.InstFormat == InstFormat.iABC:
             line = str(self.opcode).split('.')[1].ljust(self.inst_print_len)
 
-        elif self.InstFormat == InstFormat.iABC:
-            line = str(self.opcode).split('.')[1].ljust(self.inst_print_len)
-            line += '{}'.format(self.arg_A)
+            if self.opmode.has_A == Arg.U or self.opmode.has_A == Arg.S:
+                line += "{}".format(self.arg_A)
 
             if self.opmode.has_B == Arg.U or self.opmode.has_B == Arg.S:
                 line += " {}".format(self.arg_B)
@@ -134,8 +131,7 @@ class Inst():
 
         elif self.InstFormat == InstFormat.isJ:
             line = str(self.opcode).split('.')[1].ljust(self.inst_print_len)
-            line += '{}'.format(self.arg_A)
-            line += ' {}'.format(self.arg_sJ)
+            line += '{}'.format(self.arg_sJ)
 
         return line
 

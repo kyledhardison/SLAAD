@@ -219,7 +219,7 @@ class Opmodes():
         Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # SHL
         Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # SHR
         Opmode(1, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # MMBIN
-        Opmode(1, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.S, Arg.U),  # MMBINI
+        Opmode(1, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.S, Arg.U, Arg.U),  # MMBINI
         Opmode(1, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.U),  # MMBINK
         Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # UNM
         Opmode(0, 0, 0, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.N, Arg.N),  # BNOT
@@ -243,7 +243,7 @@ class Opmodes():
         Opmode(0, 1, 1, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.N),  # CALL
         Opmode(0, 1, 1, 0, 1, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.U),  # TAILCALL
         Opmode(0, 0, 1, 0, 0, InstFormat.iABC,  Arg.U, Arg.U, Arg.U, Arg.U),  # RETURN
-        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # RETURN0
+        Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.N, Arg.N, Arg.N, Arg.N),  # RETURN0
         Opmode(0, 0, 0, 0, 0, InstFormat.iABC,  Arg.U, Arg.N, Arg.N, Arg.N),  # RETURN1
         Opmode(0, 0, 0, 0, 1, InstFormat.iABx,  Arg.U, Arg.N, Arg.N, Arg.N),  # FORLOOP
         Opmode(0, 0, 0, 0, 1, InstFormat.iABx,  Arg.U, Arg.N, Arg.N, Arg.N),  # FORPREP
