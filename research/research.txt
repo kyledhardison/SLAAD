@@ -1,0 +1,76 @@
+
+Lua 5.4.4 supports 84 opcodes, in 5 different instruction formats:
+
+/*===========================================================================
+  We assume that instructions are unsigned 32-bit integers.
+  All instructions have an opcode in the first 7 bits.
+  Instructions can have the following formats:
+
+        3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
+        1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+iABC          C(8)     |      B(8)     |k|     A(8)      |   Op(7)     |
+iABx                Bx(17)               |     A(8)      |   Op(7)     |
+iAsBx              sBx (signed)(17)      |     A(8)      |   Op(7)     |
+iAx                           Ax(25)                     |   Op(7)     |
+isJ                           sJ(25)                     |   Op(7)     |
+
+  A signed argument is represented in excess K: the represented value is
+  the written unsigned value minus K, where K is half the maximum for the
+  corresponding unsigned argument.
+===========================================================================*/
+
+ONLY FOR 64 BIT SYSTEMS WITH DEFAULT CONFIGS - headers vary based on compilation options
+Bytecode header (all in hex):
+00: 4 bytes - Lua label ("\x1bLua")
+04: 1 byte - version (54)
+05: 1 byte - LUAC_FORMAT (0)
+06-0b: 6 bytes - LUAC_DATA "\x19\x93\r\n\x1a\n"
+0c: 1 byte - instruction size (04)
+0d: 1 byte - Integer size (8)
+0e: 1 byte - Lua_number size (8)
+0f-16: 8 bytes - LUAC_INT (0x5678) - endianness?
+17-1e: 8 bytes - LUAC_NUM - 370.5 > 00 00 00 00 00 28 77 40
+
+Upvalues are static variables available only within the function
+1f: 1 byte - sizeupvalues
+
+Function header:
+20-X: String
+    Strings are prefaced with a number (and an @)
+    The last byte of 'size' is OR'ed with 0x80, see dumpSize
+Int: lineDefined
+Int: LastLineDefined
+Byte: NumParams
+Byte: IsVarArg
+Byte: MaxStackSize
+Code:
+    Int: Size of code
+    Vector: Code
+Constants
+Upvalues
+Protos
+    Additional Functions
+Debug
+
+When strings are dumped it's a size followed by the raw string, see dumpString
+
+Load function:
+    String
+        Size
+        String
+            LoadUnsigned
+    Int - linedefined
+    int - lastlinedefined
+    byte - numparams
+    byte - is_vararg
+    byte - maxstacksize
+    code
+    constants
+    upvalues - equivalent of scoped static variables
+    protos
+    debug
+    
+
+read_unsigned() uses a neat format. Lua stores the lengths of some things in this format. It's a series of bytes where the first 7 bits of a byte are used for data storage, and the 8th is used to indicate whether the byte is the last in the sequence.
+
+

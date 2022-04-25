@@ -7,6 +7,13 @@ It has the ability to disassemble lua bytecode files into its VM instructions, a
 
 No relation to a different [Slaad](https://forgottenrealms.fandom.com/wiki/Slaad) you may have heard about.
 
+Lua is a lightweight scripting language that runs in a virtual machine not unlike the JVM, except it is register-based instead of stack-based, making it somewhat similar to hardware architectures.
+
+See the `examples/` directory for several sample lua programs and their corresponding byte files.
+* A number were sourced from [this repo](https://github.com/Cabrra/LUA-Projects)
+
+Note that SLAAD only supports little endian 64-bit systems with a standard Lua configuration. Your mileage may vary if you have a big endian system or an unusual Lua build.
+
 ## Usage
 ```
 usage: Disassemble a Lua 5.4.4 bytecode file [-h] [-v] [-vv] [-op] <file>
@@ -16,13 +23,13 @@ positional arguments:
 
 options:
   -h, --help           show this help message and exit
-  -v, --verbose        Verbose (print significant data member parsed)
-  -vv, --very-verbose  Very Verbose (print all data member parsed)
+  -v, --verbose        Verbose (print significant data members parsed)
+  -vv, --very-verbose  Very Verbose (print all data members parsed)
   -op, --opcode-notes  Print notes for each opcode to describe its operation
 ```
 
 ## Instruction Syntax Notes
-From Lua source code:
+From Lua source code ([see lopcodes.h](https://www.lua.org/source/5.4/lopcodes.h.html)):
 ```
 R[x] - register
 K[x] - constant (in constant table)

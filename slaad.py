@@ -12,10 +12,10 @@ def main():
                         help="The file to be disassembled")
     parser.add_argument("-v", "--verbose", dest="info",
                         action="store_true",
-                        help="Verbose (print significant data member parsed)")
+                        help="Verbose (print significant data members parsed)")
     parser.add_argument("-vv", "--very-verbose", dest="verbose",
                         action="store_true",
-                        help="Very Verbose (print all data member parsed)")
+                        help="Very Verbose (print all data members parsed)")
     parser.add_argument("-op", "--opcode-notes", dest="opcode_notes",
                         action="store_true",
                         help="Print notes for each opcode to describe its operation")
